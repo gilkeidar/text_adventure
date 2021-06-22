@@ -100,6 +100,7 @@ void printMap(Location *map, int map_size)
 		printf("Location: %s | Description: %s\n", map[i].name, map[i].description);
 		printf("Edges from %s:\n", map[i].name);
 		printEdges(&map[i]);
+		printf("\n");
 	}
 }
 
@@ -249,7 +250,7 @@ void initializePaths(Location *map, int map_size)
 
 			while (*current_char != '\0')
 			{
-				printf("%c", *current_char);
+				//printf("%c", *current_char);
 				if (*current_char == DELIMETER)
 				{
 					*current_char = '\0';
@@ -295,8 +296,9 @@ void initializePaths(Location *map, int map_size)
 		line_count++;
 	}
 
+	free(line);
 
-
+	fclose(file);
 }
 
 int main(void) 
