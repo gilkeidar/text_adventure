@@ -290,56 +290,6 @@ void initializePaths(Location *map, int map_size)
 
 				current_char++;
 			}
-
-			/*while (*current_char != '\0')
-			{
-				if (*current_char == DELIMETER)
-				{
-					*current_char = '\0';
-
-					switch (num_edge_records)
-					{
-						case 0:
-							to_Location = current_char + 1;
-							break;
-						case 1:
-							path_direction = current_char + 1;
-							break;
-						case 2:
-							path_type = current_char + 1;
-							break;
-						default:
-							break;
-					}
-
-					num_edge_records = (num_edge_records + 1) % 3;
-
-					if (num_edge_records == 0)
-					{
-						// Set new_edge flag to true
-						new_edge = 1;
-					}
-				}
-
-				if (num_edge_records == 0 && new_edge)
-				{
-					// The three pointers have been set to a particular path
-
-					// Add edge to location at index line_count - 1
-					
-					index_of_to_location = atoi(to_Location);
-
-					from = &map[line_count - 1];
-					to = &map[index_of_to_location];
-
-					addEdgeToLocation(from, to, path_direction, path_type);
-
-					// Reset new_edge flag
-					new_edge = 0;
-				}
-
-				current_char++;
-			} */
 		}
 
 		line_count++;
