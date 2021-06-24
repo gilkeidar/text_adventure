@@ -1,156 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+//#include "types.h"
+#include "utility.h"
+//#include "dictionary.h"
 #define	DELIMETER	'|'
 #define SPACE		' '
-
-struct Edge;
-struct Location;
-struct Player;
-
-typedef struct Location {
-	char *name;
-	char *description;
-	struct Edge *paths;
-} Location;
-
-typedef struct Edge {
-	struct Location *from;
-	struct Location *to;
-	char *direction;
-	char *pathType;
-	struct Edge *nextEdge;	// Next connection of particular location (acts as linked list node)
-} Edge;
-
-typedef struct Player {
-	struct Location *currentLocation;	// Player's currnt location
-	int HP;
-	int maxHP;
-} Player;
-
-int getNumberOfEdges(Edge *paths)
-{
-	if (paths == NULL)
-	{
-		return 0;
-	}
-
-	int numberOfEdges = 0;
-
-	Edge *currentEdge = paths;
-
-	while (currentEdge != NULL)
-	{
-		numberOfEdges++;
-		currentEdge = currentEdge->nextEdge;
-	}
-
-	return numberOfEdges;
-}
-
-void getDirections(char **directions, Edge *paths)
-{
-	if (paths == NULL)
-	{
-		return;
-	}
-
-	int index = 0;
-	Edge *currentEdge = paths;
-
-	while (currentEdge != NULL)
-	{
-		directions[index] = (char *)malloc(strlen(currentEdge->direction) + 1);
-		strcpy(directions[index], currentEdge->direction);
-
-		index++;
-		currentEdge = currentEdge->nextEdge;
-	}
-}
-
-void addEdgeToLocation(Location *from, Location *to, char *direction, char *pathType)
-{
-	// Input validation
-	if (from == NULL || to == NULL)
-		return;
-	
-	// Input validation complete
-	
-	// Create new Edge
-	Edge *edge = (Edge *)malloc(sizeof(Edge));
-
-	edge->from = from;
-	edge->to = to;
-	
-	edge->direction = (char *)malloc(strlen(direction) + 1);
-	strcpy(edge->direction, direction);
-	
-	edge->pathType = (char *)malloc(strlen(pathType) + 1);
-	strcpy(edge->pathType, pathType);
-	
-	edge->nextEdge = NULL;
-
-	// Edge created, now add to linked list in from location
-	if (from->paths == NULL)
-	{
-		// location has no paths
-		from->paths = edge;
-	} else
-	{
-		// Traverse paths until get to an empty node
-		Edge *current_edge = from->paths;
-
-		while (current_edge->nextEdge != NULL)
-		{
-			current_edge = current_edge->nextEdge;
-		}
-
-		current_edge->nextEdge = edge;
-	}
-}
-
-void printEdge(Edge *edge)
-{
-	// Input validation
-	if (edge == NULL)
-	{
-		return;
-	}
-	// Input validation complete
-
-	printf("Edge From: %s | To: %s | Direction: %s | Type: %s\n", edge->from->name, edge->to->name, edge->direction, edge->pathType);
-
-}
-
-void printEdges(Location *loc)
-{
-	// Input validation
-	if (loc == NULL || loc->paths == NULL)
-		return;
-	
-	// Input validation complete
-
-	Edge *current_edge = loc->paths;
-
-	while (current_edge != NULL)
-	{
-		printEdge(current_edge);
-
-		current_edge = current_edge->nextEdge;
-	}
-}
-
-
-void printMap(Location *map, int map_size)
-{
-	for (int i = 0; i < map_size; i++)
-	{
-		printf("Location: %s | Description: %s\n", map[i].name, map[i].description);
-		printf("Edges from %s:\n", map[i].name);
-		printEdges(&map[i]);
-		printf("\n");
-	}
-}
 
 Location *initializeLocations(int *map_size)
 {
@@ -349,19 +204,6 @@ void initializePaths(Location *map, int map_size)
 	fclose(file);
 }
 
-void toLowerCase(char **stringPtr)
-{
-	char *charPtr = *stringPtr;
-	while (*charPtr != '\0')
-	{
-		if (*charPtr >= 65 && *charPtr <= 90)
-		{
-			*charPtr = *charPtr + 32;
-		}
-		charPtr++;
-	}
-}
-
 int move(char *direction, Player *player, Location *map)
 {
 	if (direction == NULL || strlen(direction) == 0)
@@ -472,7 +314,17 @@ void inputCommand(char *input, int length, Player *player, Location *map)
 				printf("You can't go %s.\n", direction);
 			}
 		}
-	} else
+	} else if (strcmp(firstWord, "look") == 0)
+	{
+		if (numWords < 2)
+		{
+			printf("%s\n", player->currentLocation->description);
+		} else 
+		{
+			// Look at an object
+			printf("Looking at an object...\n");
+		}
+	} else 
 	{
 		printf("For an aspring adventurer, you sure know how to mumble.\n");
 	}
@@ -480,46 +332,27 @@ void inputCommand(char *input, int length, Player *player, Location *map)
 	//printf("exiting inputCommands\n");
 }
 
-void printDirections(Location *currentLocation)
+void inputCommand2(char *input, int length, Player *player, Location *map)
 {
-	if (currentLocation == NULL)
+	if (length <= 0)
 	{
-		return;
-	} else if (currentLocation->paths == NULL)
-	{
-		printf("You can't go anywhere.\n");
-		return;
+		printf("I'm afraid you must say something if I am to help you.");
 	}
 
-	Edge *currentEdge = currentLocation->paths;
+	// Trim input string (remove white space from both ends)
+	char *trimmedString = trimWhiteSpace(input, length);
+	printf("Trimmed input: %s|\n", trimmedString);
+
+	// Convert string to lowercase
+
+	toLowerCase(trimmedString);
+
+	// Split trimmed input
+	char **inputArray = splitString(trimmedString, SPACE);
+
+	// Call function based on first word and send rest of input to it
+
 	
-	int numPaths = getNumberOfEdges(currentLocation->paths);
-
-	printf("You can go ");
-
-	if (numPaths == 1)
-	{
-		printf("%s.\n", currentEdge->direction);
-	} else if (numPaths == 2)
-	{
-		printf("%s and %s.\n", currentEdge->direction, currentEdge->nextEdge->direction);
-	} else
-	{
-		int count = numPaths;
-		while (currentEdge != NULL)
-		{
-			if (count == 1)
-			{
-				printf("and %s.", currentEdge->direction);
-			}
-			else {
-				printf("%s, ", currentEdge->direction);
-			}
-
-			count--;
-			currentEdge = currentEdge->nextEdge;
-		}
-	}
 }
 
 int main(void) 
@@ -530,11 +363,16 @@ int main(void)
 
 	Player *player;
 
+	//Entry **funHashTable = NULL;	// Function hash table
+
 	// Initialize locations
 	map = initializeLocations(&map_size);
 
 	// Initialize paths
 	initializePaths(map, map_size);
+
+	// Initialize function hash table
+	//initializeHashTable(&funHashTable);
 
 	//printMap(map, map_size);
 
@@ -567,7 +405,8 @@ int main(void)
 		//printf("\n");
 
 		//printf("Line: %s\n", line);
-		inputCommand(line, read, player, map);
+		//inputCommand(line, read, player, map);
+		inputCommand2(line, read, player, map);
 		printf("\n");
 	}
 	
