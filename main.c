@@ -2,9 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #define	DELIMETER	'|'
+#define SPACE		' '
 
 struct Edge;
 struct Location;
+struct Player;
 
 typedef struct Location {
 	char *name;
@@ -19,6 +21,52 @@ typedef struct Edge {
 	char *pathType;
 	struct Edge *nextEdge;	// Next connection of particular location (acts as linked list node)
 } Edge;
+
+typedef struct Player {
+	struct Location *currentLocation;	// Player's currnt location
+	int HP;
+	int maxHP;
+} Player;
+
+int getNumberOfEdges(Edge *paths)
+{
+	if (paths == NULL)
+	{
+		return 0;
+	}
+
+	int numberOfEdges = 0;
+
+	Edge *currentEdge = paths;
+
+	while (currentEdge != NULL)
+	{
+		numberOfEdges++;
+		currentEdge = currentEdge->nextEdge;
+	}
+
+	return numberOfEdges;
+}
+
+void getDirections(char **directions, Edge *paths)
+{
+	if (paths == NULL)
+	{
+		return;
+	}
+
+	int index = 0;
+	Edge *currentEdge = paths;
+
+	while (currentEdge != NULL)
+	{
+		directions[index] = (char *)malloc(strlen(currentEdge->direction) + 1);
+		strcpy(directions[index], currentEdge->direction);
+
+		index++;
+		currentEdge = currentEdge->nextEdge;
+	}
+}
 
 void addEdgeToLocation(Location *from, Location *to, char *direction, char *pathType)
 {
@@ -301,11 +349,186 @@ void initializePaths(Location *map, int map_size)
 	fclose(file);
 }
 
+void toLowerCase(char **stringPtr)
+{
+	char *charPtr = *stringPtr;
+	while (*charPtr != '\0')
+	{
+		if (*charPtr >= 65 && *charPtr <= 90)
+		{
+			*charPtr = *charPtr + 32;
+		}
+		charPtr++;
+	}
+}
+
+int move(char *direction, Player *player, Location *map)
+{
+	if (direction == NULL || strlen(direction) == 0)
+	{
+		//printf("direction: %s\n", direction);
+		return -1;
+	}
+
+	//int numPaths = getNumberOfEdges(player->currentLocation->paths);
+
+	//printf("numPaths: %d\n", numPaths);
+
+	//char **directions = (char **)malloc(numPaths * sizeof(char *));
+
+	//getDirections(directions, player->currentLocation->paths);
+
+	Edge *currentEdge = player->currentLocation->paths;
+	while (currentEdge != NULL)
+	{
+		//printf("Direction: %s\n", currentEdge->direction);
+
+		if (strcmp(direction, currentEdge->direction) == 0)
+		{
+			printf("Going %s...\n", currentEdge->direction);
+			player->currentLocation = currentEdge->to;
+			return 0;
+		}
+
+		currentEdge = currentEdge->nextEdge;
+	}
+
+	return -1; // Didn't find direction
+}
+
+void inputCommand(char *input, int length, Player *player, Location *map)
+{
+	if (length <= 0)
+	{
+		printf("I'm afraid you must say something if I am to help you.");
+	}
+
+	// Split input line into an array, convert all lines to lowercase, then
+	// funnel input by first word command.
+
+	int spacePositions[length];
+
+	// Iterate over input string and specify locations of spaces
+	char *currentChar = input;
+	int charPos = 0;
+	int numWords = 0;
+	int isWord = 0;
+
+	while (*currentChar != '\0')
+	{
+		//printf("Current char: %c %d\n", *currentChar, *currentChar);
+		if (*currentChar == SPACE && isWord)
+		{
+			// store space position (right after previous word, and right before next word)
+			spacePositions[numWords] = charPos;
+			numWords++;
+			isWord = 0;
+			*currentChar = '\0';
+		} else if (*currentChar >= 33 && *currentChar <= 126)
+		{
+			isWord = 1;
+
+			if (numWords == 0) // If first char is not a space, it must be a word
+			{
+				spacePositions[numWords] = charPos - 1; // store -1 to start at index 0 (imaginary space before first word in index 0)
+				numWords++;
+			}
+		}
+		else if (*currentChar == '\n') // Replace new line with \0 char
+		{
+			*currentChar ='\0';
+		}
+		currentChar++;
+		charPos++;
+	}
+
+	//printf("Modified line: %s\n", input);
+
+	// Now the number of words and the positions of the spaces separating them is known,
+	// get first word
+
+	char *firstWord = input + spacePositions[0] + 1;
+
+	//printf("space before first word position: %d\n", spacePositions[0]);
+
+	//printf("First word: %s |\n", firstWord);
+	//printf("numWords = %d\n", numWords);
+
+	if (strcmp(firstWord, "quit") == 0)
+	{
+		printf("Bye!\n");
+		exit(EXIT_SUCCESS);
+	} else if (strcmp(firstWord, "go") == 0)
+	{
+		//printf("Going!\n");
+		if (numWords < 2)
+		{
+			printf("Where do you want to go?\n");
+		} else {
+			//printf("Going somewhere\n");
+			char *direction = input + spacePositions[1] + 1;
+			if (move(direction, player, map) != 0)
+			{
+				printf("You can't go %s.\n", direction);
+			}
+		}
+	} else
+	{
+		printf("For an aspring adventurer, you sure know how to mumble.\n");
+	}
+
+	//printf("exiting inputCommands\n");
+}
+
+void printDirections(Location *currentLocation)
+{
+	if (currentLocation == NULL)
+	{
+		return;
+	} else if (currentLocation->paths == NULL)
+	{
+		printf("You can't go anywhere.\n");
+		return;
+	}
+
+	Edge *currentEdge = currentLocation->paths;
+	
+	int numPaths = getNumberOfEdges(currentLocation->paths);
+
+	printf("You can go ");
+
+	if (numPaths == 1)
+	{
+		printf("%s.\n", currentEdge->direction);
+	} else if (numPaths == 2)
+	{
+		printf("%s and %s.\n", currentEdge->direction, currentEdge->nextEdge->direction);
+	} else
+	{
+		int count = numPaths;
+		while (currentEdge != NULL)
+		{
+			if (count == 1)
+			{
+				printf("and %s.", currentEdge->direction);
+			}
+			else {
+				printf("%s, ", currentEdge->direction);
+			}
+
+			count--;
+			currentEdge = currentEdge->nextEdge;
+		}
+	}
+}
+
 int main(void) 
 {
 	/*	Variables	*/
 	Location *map = NULL;
 	int map_size = -1;
+
+	Player *player;
 
 	// Initialize locations
 	map = initializeLocations(&map_size);
@@ -313,10 +536,40 @@ int main(void)
 	// Initialize paths
 	initializePaths(map, map_size);
 
-	printMap(map, map_size);
+	//printMap(map, map_size);
 
+	// Create player
+	player = (Player *)malloc(sizeof(Player));
+
+	// Set player's HP
+	player->maxHP = player->HP = 250;
+
+	// Initialize player's location to Evelore Woods
+	player->currentLocation = &map[0];
+
+	// Clear screen - thanks, Jamesits! https://stackoverflow.com/questions/2347770/how-do-you-clear-the-console-screen-in-c
+	system("@cls||clear");
+
+	// Variables to read user input
+	char *line = NULL;
+	size_t len = 0;
+	size_t read;
+
+	while (player->HP > 0)
+	{
+		printf("%s\n", player->currentLocation->name);
+		printf("%s\n", player->currentLocation->description);
+		printDirections(player->currentLocation);
+		//printf("\n");
+		printf("> ");
+
+		read = getline(&line, &len, stdin);
+		//printf("\n");
+
+		//printf("Line: %s\n", line);
+		inputCommand(line, read, player, map);
+		printf("\n");
+	}
 	
-
-
 	return 0;
 }
