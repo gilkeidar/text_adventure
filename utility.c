@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include "utility.h"
+//#include "utility.h"
+#include "game.h"
 
 
 int getNumberOfEdges(Edge *paths)

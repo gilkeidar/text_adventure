@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 //#include "types.h"
-#include "utility.h"
+//#include "utility.h"
 //#include "dictionary.h"
+#include "game.h"
 #define	DELIMETER	'|'
 #define SPACE		' '
 
@@ -363,7 +364,7 @@ int main(void)
 
 	Player *player;
 
-	//Entry **funHashTable = NULL;	// Function hash table
+	Entry **funHashTable = NULL;	// Function hash table
 
 	// Initialize locations
 	map = initializeLocations(&map_size);
@@ -372,7 +373,7 @@ int main(void)
 	initializePaths(map, map_size);
 
 	// Initialize function hash table
-	//initializeHashTable(&funHashTable);
+	initializeHashTable(&funHashTable);
 
 	//printMap(map, map_size);
 
