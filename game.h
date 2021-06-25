@@ -29,6 +29,12 @@ typedef struct Entry {		/* Hash-table entry */
 	int (*fun)(char **, Player *, Location *);	/* Function pointer */
 } Entry;
 
+void initializeHashTable(Entry ***hashTable);
+
+void addToTable(char *funcName, int (*fun)(char **, Player *, Location *), Entry **hashTable);
+
+Entry *get(char *funcName, Entry** hashTable);
+
 // utility.h
 
 int getNumberOfEdges(Edge *paths);

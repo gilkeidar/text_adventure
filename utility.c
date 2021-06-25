@@ -290,7 +290,7 @@ char **splitString(char *string, char delim)
 
 	for (int i = 0; i < numWords; i++)
 	{
-		printf("Array word: %s|\n", wordsArray[i]);
+		//printf("Array word: %s|\n", wordsArray[i]);
 	}
 
 	return wordsArray;

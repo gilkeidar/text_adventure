@@ -333,7 +333,7 @@ void inputCommand(char *input, int length, Player *player, Location *map)
 	//printf("exiting inputCommands\n");
 }
 
-void inputCommand2(char *input, int length, Player *player, Location *map)
+void inputCommand2(char *input, int length, Player *player, Location *map, Entry **hashTable)
 {
 	if (length <= 0)
 	{
@@ -342,7 +342,7 @@ void inputCommand2(char *input, int length, Player *player, Location *map)
 
 	// Trim input string (remove white space from both ends)
 	char *trimmedString = trimWhiteSpace(input, length);
-	printf("Trimmed input: %s|\n", trimmedString);
+	//printf("Trimmed input: %s|\n", trimmedString);
 
 	// Convert string to lowercase
 
@@ -353,7 +353,46 @@ void inputCommand2(char *input, int length, Player *player, Location *map)
 
 	// Call function based on first word and send rest of input to it
 
+	char *functionName = inputArray[0];
+
+	// Convert any alias (e.g. "north" or "go" to "move") to fit hash table key
+
 	
+
+	Entry *result = get(functionName, hashTable);
+
+	if (result == NULL)
+	{
+		printf("I'm afraid I don't understand.\n");
+	} else {
+		//printf("result->name: %s\n", result->name);
+
+		// Call function
+		result->fun(inputArray, player, map);
+	}
+}
+
+int look(char **inputArray, Player *player, Location *map)
+{
+	printf("%s\n", player->currentLocation->description);
+}
+
+int quit(char **inputArray, Player *player, Location *map)
+{
+	printf("Bye!\n");
+	exit(EXIT_SUCCESS);
+}
+
+void fillHashTable(Entry **hashTable)
+{
+	// Add "move" to the hash table
+	//addToTable("move", move, hashTable);
+
+	// Add "look" to the hash table
+	addToTable("look", look, hashTable);
+
+	// Add "quit" to the hash table
+	addToTable("quit", quit, hashTable);
 }
 
 int main(void) 
@@ -374,6 +413,8 @@ int main(void)
 
 	// Initialize function hash table
 	initializeHashTable(&funHashTable);
+
+	fillHashTable(funHashTable);
 
 	//printMap(map, map_size);
 
@@ -407,8 +448,8 @@ int main(void)
 
 		//printf("Line: %s\n", line);
 		//inputCommand(line, read, player, map);
-		inputCommand2(line, read, player, map);
-		printf("\n");
+		inputCommand2(line, read, player, map, funHashTable);
+		//printf("\n");
 	}
 	
 	return 0;
