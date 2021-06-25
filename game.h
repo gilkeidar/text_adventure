@@ -1,5 +1,18 @@
 // Includes everything
 
+/* directions */
+/*#define	NORTH		0
+#define	NORTHEAST	1
+#define	EAST		2
+#define SOUTHEAST	3
+#define	SOUTH		4
+#define	SOUTHWEST	5
+#define	WEST		6
+#define NORTHWEST	7
+#define UP			8
+#define DOWN		9
+*/
+
 // types.h
 typedef struct Location {
 	char *name;
@@ -26,12 +39,12 @@ typedef struct Player {
 typedef struct Entry {		/* Hash-table entry */
 	struct Entry *next;		/* Next entry in same index */
 	char *name;				/* Entry name */
-	int (*fun)(char **, Player *, Location *);	/* Function pointer */
+	int (*fun)(char **, int, Player *, Location *);	/* Function pointer */
 } Entry;
 
 void initializeHashTable(Entry ***hashTable);
 
-void addToTable(char *funcName, int (*fun)(char **, Player *, Location *), Entry **hashTable);
+void addToTable(char *funcName, int (*fun)(char **, int, Player *, Location *), Entry **hashTable);
 
 Entry *get(char *funcName, Entry** hashTable);
 
@@ -55,4 +68,6 @@ void printDirections(Location *currentLocation);
 
 char *trimWhiteSpace(char *string, int length);
 
-char **splitString(char *string, char delim);
+char **splitString(char *string, int *, char delim);
+
+int isStringInArray(char *string, char **stringArray, int arrayLength);

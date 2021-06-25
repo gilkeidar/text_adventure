@@ -5,8 +5,14 @@
 //#include "utility.h"
 //#include "dictionary.h"
 #include "game.h"
-#define	DELIMETER	'|'
-#define SPACE		' '
+#define	DELIMETER			'|'
+#define SPACE				' '
+#define NUMBER_DIRECTIONS	10
+
+static const char *directions[] = {"north", "northeast", "east", "southeast", 
+		"south", "southwest", "west", "northwest", "up", "down"};
+
+static const char *shortDirections[] = {"n", "ne", "e", "se", "s", "sw", "w", "nw", "u", "d"};
 
 Location *initializeLocations(int *map_size)
 {
@@ -348,8 +354,12 @@ void inputCommand2(char *input, int length, Player *player, Location *map, Entry
 
 	toLowerCase(trimmedString);
 
+	int sizeOfInput = 0;
+
 	// Split trimmed input
-	char **inputArray = splitString(trimmedString, SPACE);
+	char **inputArray = splitString(trimmedString, &sizeOfInput, SPACE);
+
+	//printf("inputSize: %d\n", sizeOfInput);
 
 	// Call function based on first word and send rest of input to it
 
@@ -357,7 +367,25 @@ void inputCommand2(char *input, int length, Player *player, Location *map, Entry
 
 	// Convert any alias (e.g. "north" or "go" to "move") to fit hash table key
 
-	
+	// Check whether input is a direction and convert it to "go [direction]"
+	int directionIndex = isStringInArray(functionName, directions, NUMBER_DIRECTIONS);
+
+	if (directionIndex == -1)
+	{
+		directionIndex = isStringInArray(functionName, shortDirections, NUMBER_DIRECTIONS);
+	}
+
+	if (directionIndex != -1)
+	{
+		functionName = inputArray[0] = "go";
+
+		sizeOfInput = 2;
+
+		realloc(inputArray, sizeOfInput * sizeof(char *));
+		
+		inputArray[1] = (char *)malloc(strlen(directions[directionIndex]) + 1);
+		strcpy(inputArray[1], directions[directionIndex]);
+	}
 
 	Entry *result = get(functionName, hashTable);
 
@@ -368,19 +396,51 @@ void inputCommand2(char *input, int length, Player *player, Location *map, Entry
 		//printf("result->name: %s\n", result->name);
 
 		// Call function
-		result->fun(inputArray, player, map);
+		result->fun(inputArray, sizeOfInput, player, map);
 	}
 }
 
-int look(char **inputArray, Player *player, Location *map)
+int look(char **inputArray, int inputSize, Player *player, Location *map)
 {
 	printf("%s\n", player->currentLocation->description);
 }
 
-int quit(char **inputArray, Player *player, Location *map)
+int quit(char **inputArray, int inputSize, Player *player, Location *map)
 {
 	printf("Bye!\n");
 	exit(EXIT_SUCCESS);
+}
+
+int go(char **inputArray, int inputSize, Player *player, Location *map)
+{
+	char *direction = NULL;
+	if (inputSize == 1 && strcmp(inputArray[0], "go") == 0) 
+	{
+		printf("Where do you want to go?\n");
+		return 1;
+	}
+	else
+	{
+		direction = inputArray[1];
+	}
+
+	Edge *currentEdge = player->currentLocation->paths;
+	while (currentEdge != NULL)
+	{
+		//printf("Direction: %s\n", currentEdge->direction);
+
+		if (strcmp(direction, currentEdge->direction) == 0)
+		{
+			printf("Going %s...\n", currentEdge->direction);
+			player->currentLocation = currentEdge->to;
+			return 0;
+		}
+
+		currentEdge = currentEdge->nextEdge;
+	}
+
+	printf("You can't go %s.\n\n", direction);
+	return -1; // Didn't find direction
 }
 
 void fillHashTable(Entry **hashTable)
@@ -393,6 +453,9 @@ void fillHashTable(Entry **hashTable)
 
 	// Add "quit" to the hash table
 	addToTable("quit", quit, hashTable);
+
+	// Add "go" to the hash table
+	addToTable("go", go, hashTable);
 }
 
 int main(void) 
@@ -404,6 +467,11 @@ int main(void)
 	Player *player;
 
 	Entry **funHashTable = NULL;	// Function hash table
+
+	const char *directions[] = {"north", "northeast", "east", "southeast", 
+		"south", "southwest", "west", "northwest", "up", "down"};
+
+	const char *shortDirections[] = {"n", "ne", "e", "se", "s", "sw", "w", "nw", "u", "d"};
 
 	// Initialize locations
 	map = initializeLocations(&map_size);

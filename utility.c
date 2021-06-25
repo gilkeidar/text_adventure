@@ -227,7 +227,7 @@ char *trimWhiteSpace(char *string, int length)
 	return newString;
 }
 
-char **splitString(char *string, char delim)
+char **splitString(char *string, int *size, char delim)
 {
 	//printf("Entered splitString\n");
 	if (string == NULL)
@@ -293,5 +293,21 @@ char **splitString(char *string, char delim)
 		//printf("Array word: %s|\n", wordsArray[i]);
 	}
 
+	// Set size to numWords
+	*size = numWords;
+
 	return wordsArray;
+}
+
+int isStringInArray(char *string, char **stringArray, int arrayLength)
+{
+	for (int i = 0; i < arrayLength; i++)
+	{
+		if (strcmp(string, stringArray[i]) == 0)
+		{
+			return i;
+		}
+	}
+
+	return -1;
 }

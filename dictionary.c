@@ -35,7 +35,7 @@ int hash(char *funcName)
 	return hashVal % TABLE_SIZE;
 }
 
-void addToTable(char *funcName, int (*fun)(char **, Player *, Location *), Entry **hashTable)
+void addToTable(char *funcName, int (*fun)(char **, int, Player *, Location *), Entry **hashTable)
 {
 	// Add a function to the hash table
 
