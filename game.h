@@ -1,5 +1,7 @@
 // Includes everything
 
+#define TABLE_SIZE	50
+
 /* directions */
 /*#define	NORTH		0
 #define	NORTHEAST	1

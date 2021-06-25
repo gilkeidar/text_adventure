@@ -9,10 +9,20 @@
 #define SPACE				' '
 #define NUMBER_DIRECTIONS	10
 
+/* Globals */
 static const char *directions[] = {"north", "northeast", "east", "southeast", 
 		"south", "southwest", "west", "northwest", "up", "down"};
 
 static const char *shortDirections[] = {"n", "ne", "e", "se", "s", "sw", "w", "nw", "u", "d"};
+
+Location *map = NULL;
+int map_size = -1;
+
+Entry **funHashTable = NULL; // Function hash table
+
+char *input_line = NULL;
+
+/* Globals */
 
 Location *initializeLocations(int *map_size)
 {
@@ -359,6 +369,8 @@ void inputCommand2(char *input, int length, Player *player, Location *map, Entry
 	// Split trimmed input
 	char **inputArray = splitString(trimmedString, &sizeOfInput, SPACE);
 
+	free(trimmedString);
+
 	//printf("inputSize: %d\n", sizeOfInput);
 
 	// Call function based on first word and send rest of input to it
@@ -377,14 +389,23 @@ void inputCommand2(char *input, int length, Player *player, Location *map, Entry
 
 	if (directionIndex != -1)
 	{
-		functionName = inputArray[0] = "go";
+		freeStringArray(inputArray, sizeOfInput);
 
 		sizeOfInput = 2;
 
-		realloc(inputArray, sizeOfInput * sizeof(char *));
+		inputArray = (char **)malloc(sizeOfInput * sizeof(char *));
+
+		functionName = "go";
+		inputArray[0] = (char *)malloc(strlen(functionName) + 1);
+		strcpy(inputArray[0], functionName);
 		
 		inputArray[1] = (char *)malloc(strlen(directions[directionIndex]) + 1);
 		strcpy(inputArray[1], directions[directionIndex]);
+
+		/*for (int i = 0; i < sizeOfInput; i++)
+		{
+			printf("input[%d] = %s\n", i, inputArray[i]);
+		}*/
 	}
 
 	Entry *result = get(functionName, hashTable);
@@ -398,6 +419,7 @@ void inputCommand2(char *input, int length, Player *player, Location *map, Entry
 		// Call function
 		result->fun(inputArray, sizeOfInput, player, map);
 	}
+	freeStringArray(inputArray, sizeOfInput);
 }
 
 int look(char **inputArray, int inputSize, Player *player, Location *map)
@@ -408,7 +430,8 @@ int look(char **inputArray, int inputSize, Player *player, Location *map)
 int quit(char **inputArray, int inputSize, Player *player, Location *map)
 {
 	printf("Bye!\n");
-	exit(EXIT_SUCCESS);
+	freeStringArray(inputArray, inputSize);
+	exit_game(player);
 }
 
 int go(char **inputArray, int inputSize, Player *player, Location *map)
@@ -458,20 +481,25 @@ void fillHashTable(Entry **hashTable)
 	addToTable("go", go, hashTable);
 }
 
+int exit_game(Player *player)
+{
+	free(input_line);
+	freeMap(map, map_size);
+	freePlayer(player);
+	freeHashTable(funHashTable);
+
+	exit(EXIT_SUCCESS);
+}
+
 int main(void) 
 {
 	/*	Variables	*/
-	Location *map = NULL;
-	int map_size = -1;
+	Player *player = NULL;
 
-	Player *player;
-
-	Entry **funHashTable = NULL;	// Function hash table
-
-	const char *directions[] = {"north", "northeast", "east", "southeast", 
+	/*const char *directions[] = {"north", "northeast", "east", "southeast", 
 		"south", "southwest", "west", "northwest", "up", "down"};
 
-	const char *shortDirections[] = {"n", "ne", "e", "se", "s", "sw", "w", "nw", "u", "d"};
+	const char *shortDirections[] = {"n", "ne", "e", "se", "s", "sw", "w", "nw", "u", "d"};*/
 
 	// Initialize locations
 	map = initializeLocations(&map_size);
@@ -499,7 +527,7 @@ int main(void)
 	system("@cls||clear");
 
 	// Variables to read user input
-	char *line = NULL;
+	
 	size_t len = 0;
 	size_t read;
 
@@ -511,14 +539,20 @@ int main(void)
 		//printf("\n");
 		printf("> ");
 
-		read = getline(&line, &len, stdin);
+		read = getline(&input_line, &len, stdin);
 		//printf("\n");
 
 		//printf("Line: %s\n", line);
 		//inputCommand(line, read, player, map);
-		inputCommand2(line, read, player, map, funHashTable);
+		inputCommand2(input_line, read, player, map, funHashTable);
+
+		printf("len: %d\n", len);
+		
 		//printf("\n");
 	}
+
+	// Exit game and free everything
+	exit_game(player);
 	
 	return 0;
 }

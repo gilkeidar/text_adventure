@@ -3,7 +3,7 @@
 #include <string.h>
 //#include "dictionary.h"
 #include "game.h"
-#define TABLE_SIZE	50
+
 
 void initializeHashTable(Entry ***hashTable)
 {

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 //#include "utility.h"
 #include "game.h"
@@ -128,11 +129,16 @@ void toLowerCase(char *stringPtr)
 	}
 }
 
+void printLocation(Location *location)
+{
+	printf("Location: %s | Description: %s\n", location->name, location->description);
+}
+
 void printMap(Location *map, int map_size)
 {
 	for (int i = 0; i < map_size; i++)
 	{
-		printf("Location: %s | Description: %s\n", map[i].name, map[i].description);
+		printLocation(&map[i]);
 		printf("Edges from %s:\n", map[i].name);
 		printEdges(&map[i]);
 		printf("\n");
@@ -310,4 +316,107 @@ int isStringInArray(char *string, char **stringArray, int arrayLength)
 	}
 
 	return -1;
+}
+
+void freePaths(Edge *paths)
+{
+	//printf("freePaths()\n");
+	if (paths == NULL)
+	{
+		return;
+	}
+	Edge *currentEdge = paths;
+	Edge *nextEdge = NULL;
+	
+	while (currentEdge != NULL)
+	{
+		nextEdge = currentEdge->nextEdge;
+
+		//printEdge(currentEdge);
+
+		// Free currentEdge
+		//printf("direction\n");
+		free(currentEdge->direction);
+		//printf("pathType\n");
+		free(currentEdge->pathType);
+		//printf("edge\n");
+		free(currentEdge);
+
+		currentEdge = nextEdge;
+	}
+}
+
+void freeLocation(Location * location)
+{
+	//printf("freeLocation()\n");
+	if (location == NULL)
+	{
+		return;
+	}
+	//printLocation(location);
+	// Free location->name
+	free(location->name);
+	free(location->description);
+
+	freePaths(location->paths);
+
+	//free(location);
+}
+
+void freeMap(Location *map, int mapSize)
+{
+	
+	/*for (int i = 0; i < mapSize; i++)
+	{
+		printf("Freeing paths of location %d\n", i);
+		freePaths(map[i].paths);
+	}*/
+
+	for (int i = 0; i < mapSize; i++)
+	{
+		//printf("Freeing location %d\n", i);
+		freeLocation(&map[i]);
+	}
+
+	free(map);
+}
+
+void freePlayer(Player *player)
+{
+	free(player);
+}
+
+void freeEntries(Entry *entry)
+{
+	Entry *currentEntry = entry;
+	Entry *nextEntry = NULL;
+
+	while (currentEntry != NULL)
+	{
+		nextEntry = currentEntry->next;
+
+		free(currentEntry->name);
+		free(currentEntry);
+
+		currentEntry = nextEntry;
+	}
+}
+
+void freeHashTable(Entry **hashTable)
+{
+	for (int i = 0; i < TABLE_SIZE; i++)
+	{
+		freeEntries(hashTable[i]);
+	}
+
+	free(hashTable);
+}
+
+void freeStringArray(char **stringArray, int length)
+{
+	for (int i = 0; i < length; i++)
+	{
+		free(stringArray[i]);
+	}
+	free(stringArray);
 }
